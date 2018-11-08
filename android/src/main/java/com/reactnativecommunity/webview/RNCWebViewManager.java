@@ -112,6 +112,15 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
   protected WebViewConfig mWebViewConfig;
   protected @Nullable WebView.PictureListener mPictureListener;
 
+  private RNCWebViewPackage mPackage;
+
+  public void setPackage(RNCWebViewPackage aPackage){
+    this.mPackage = aPackage;
+  }
+   public RNCWebViewPackage getPackage(){
+    return this.mPackage;
+  }
+
   protected static class RNCWebViewClient extends WebViewClient {
 
     protected boolean mLastLoadFailed = false;
@@ -402,6 +411,7 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
   @TargetApi(Build.VERSION_CODES.LOLLIPOP)
   protected WebView createViewInstance(ThemedReactContext reactContext) {
     RNCWebView webView = createRNCWebViewInstance(reactContext);
+    final RNCWebViewModule module = this.mPackage.getModule();
     webView.setWebChromeClient(new WebChromeClient() {
       @Override
       public boolean onConsoleMessage(ConsoleMessage message) {
@@ -433,6 +443,24 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
       public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
         callback.invoke(origin, true, false);
       }
+      protected void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType) {
+        module.openFileChooserView(uploadMsg, acceptType);
+      }
+
+      protected void openFileChooser(ValueCallback<Uri> uploadMsg) {
+        module.openFileChooserView(uploadMsg, null);
+      }
+
+      protected void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType, String capture) {
+        module.openFileChooserView(uploadMsg, acceptType);
+      }
+
+      @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+      @Override
+      public boolean onShowFileChooser (WebView webView, ValueCallback<Uri[]> filePathCallback, WebChromeClient.FileChooserParams fileChooserParams) {
+        return module.openFileChooserViewL(filePathCallback, fileChooserParams);
+      }
+
     });
     reactContext.addLifecycleEventListener(webView);
     mWebViewConfig.configWebView(webView);
